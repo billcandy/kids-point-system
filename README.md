@@ -4,7 +4,7 @@ A fun and interactive point system to motivate kids to study English! Parents ca
 
 ## ✨ Features
 
-- 🔐 **Password Protection**: Secure family access with password `ellieisagoodmom`
+- 🔐 **Password Protection**: Secure family access with password `1225`
 - 🏆 **Family Shared Account**: Both parents can add points from their own devices
 - 🌟 **Beautiful Stamp Collection**: Visual feedback with animated stamps  
 - 🎁 **Customizable Rewards**: Set up rewards that kids can "purchase" with points
@@ -46,16 +46,17 @@ For full functionality, create a Personal Access Token:
 
 ### First Time Setup:
 1. Open the website on your phone/computer
-2. **Login Screen**: Enter password `ellieisagoodmom`
+2. **Login Screen**: Enter password `1225`
 3. Click "🚀 Enter System" or press Enter
 4. You'll stay logged in for 7 days!
 
 ### For Parents (After Login):
-1. Click "📚 Complete English Study" 
-2. Enter PIN code (default: 1234)
-3. Point is added and synced automatically!
-4. Click "🔄 Refresh Data" to see updates from other parent
-5. Use "🚪 Logout" button if needed
+1. Click "📚 Complete English Study" to **ADD** a point
+2. Click "❌ Cancel Last Point" to **REMOVE** the last point
+3. Enter PIN code (default: 1234) for both actions
+4. Points sync automatically between devices!
+5. Click "🔄 Refresh Data" to see updates from other parent
+6. Use "🚪 Logout" button if needed
 
 ### For Kids:
 - See their beautiful stamp collection grow
