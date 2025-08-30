@@ -3,18 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kids Point System - GitHub Sync</title>
-    
-    <!-- PWA Meta Tags for iPhone -->
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Kids Points">
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="theme-color" content="#667eea">
-    
-    <!-- Prevent zoom on iOS -->
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    
+    <title>Kids Point System - Ready to Use</title>
     <style>
         * {
             margin: 0;
@@ -48,6 +37,44 @@
             font-size: 24px;
             font-weight: bold;
             margin-bottom: 10px;
+        }
+
+        .auto-setup {
+            background: #f0fff4;
+            border: 2px solid #9ae6b4;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .auto-setup-title {
+            font-weight: bold;
+            color: #38a169;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+
+        .setup-btn {
+            background: #48bb78;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 15px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 16px;
+            margin: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .setup-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .setup-btn.secondary {
+            background: #718096;
         }
 
         .points-display {
@@ -288,31 +315,6 @@
             cursor: pointer;
         }
 
-        .loading {
-            opacity: 0.6;
-            pointer-events: none;
-        }
-
-        .error-message {
-            color: #e53e3e;
-            background: #fed7d7;
-            padding: 10px;
-            border-radius: 8px;
-            margin: 10px 0;
-            font-size: 14px;
-        }
-
-        .refresh-btn {
-            background: #38a169;
-            color: white;
-            border: none;
-            padding: 6px 12px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 12px;
-            margin-left: 10px;
-        }
-
         .family-info {
             background: #e6fffa;
             border: 2px solid #81e6d9;
@@ -330,44 +332,6 @@
         .family-info p {
             color: #4a5568;
             font-size: 14px;
-        }
-
-        .setup-section {
-            background: #fff5f5;
-            border: 2px solid #feb2b2;
-            border-radius: 15px;
-            padding: 20px;
-            margin-bottom: 20px;
-        }
-
-        .setup-title {
-            font-weight: bold;
-            color: #e53e3e;
-            margin-bottom: 10px;
-            font-size: 16px;
-        }
-
-        .config-input {
-            width: 100%;
-            padding: 10px;
-            border: 2px solid #e2e8f0;
-            border-radius: 8px;
-            font-size: 14px;
-        }
-
-        .setup-btn {
-            background: #4299e1;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: bold;
-            font-size: 14px;
-        }
-
-        .setup-btn:hover {
-            background: #3182ce;
         }
 
         .login-screen {
@@ -509,28 +473,18 @@
     <div class="container" id="mainApp" style="display: none;">
         <button class="logout-btn" onclick="logout()" title="Logout">🚪 Logout</button>
         
-        <!-- First-time Token Setup -->
-        <div id="tokenSection" class="setup-section" style="display: none;">
-            <div class="setup-title">🔑 一次性設定</div>
+        <!-- One-time Setup Section -->
+        <div id="setupSection" class="auto-setup">
+            <div class="auto-setup-title">🚀 First Time Setup</div>
             <p style="font-size: 14px; margin-bottom: 15px; color: #4a5568;">
-                為了讓你們的點數可以互相同步，請貼上 GitHub Token（只需要設定一次）
+                Choose how you want to use the point system:
             </p>
-            
-            <input 
-                type="password" 
-                id="githubToken" 
-                class="config-input" 
-                placeholder="貼上你的 GitHub token"
-                style="margin-bottom: 10px;"
-            >
-            
-            <div style="font-size: 12px; color: #718096; margin-bottom: 15px;">
-                💡 <strong>Token 已經準備好了：</strong><br>
-                直接貼上你的 GitHub Personal Access Token
-            </div>
-            
-            <button class="setup-btn" onclick="saveToken()">💾 保存並開始同步</button>
-            <button class="setup-btn" onclick="useLocalOnly()" style="background: #718096; margin-left: 10px;">📱 僅本機使用</button>
+            <button class="setup-btn" onclick="enableAutoSync()">☁️ Enable Auto Sync</button>
+            <button class="setup-btn secondary" onclick="useLocalOnly()">📱 Local Only</button>
+            <p style="font-size: 12px; color: #718096; margin-top: 10px;">
+                Auto Sync: Points sync between all family devices<br>
+                Local Only: Each device keeps its own points
+            </p>
         </div>
         
         <div class="header">
@@ -539,7 +493,7 @@
 
         <div class="family-info">
             <h3>👨‍👩‍👧 Family Shared Account</h3>
-            <p id="syncInfo">Ready to sync! Points will be shared between all devices.</p>
+            <p id="syncInfo">Data syncs through GitHub.</p>
         </div>
 
         <div class="points-display">
@@ -621,18 +575,15 @@
             const errorDiv = document.getElementById('loginError');
             
             if (password === FAMILY_PASSWORD) {
-                // Login successful
                 localStorage.setItem('family_login', 'true');
                 localStorage.setItem('login_time', Date.now().toString());
                 showMainApp();
                 errorDiv.style.display = 'none';
             } else {
-                // Login failed
                 errorDiv.style.display = 'block';
                 document.getElementById('loginPassword').value = '';
                 document.getElementById('loginPassword').focus();
                 
-                // Add shake animation
                 const loginCard = document.querySelector('.login-card');
                 loginCard.style.animation = 'shake 0.5s';
                 setTimeout(() => {
@@ -654,6 +605,12 @@
             document.getElementById('loginScreen').style.display = 'none';
             document.getElementById('mainApp').style.display = 'block';
             isLoggedIn = true;
+            
+            // Check if setup is needed
+            const hasSetup = localStorage.getItem('setup_complete');
+            if (!hasSetup) {
+                document.getElementById('setupSection').style.display = 'block';
+            }
         }
         
         function showLoginScreen() {
@@ -669,7 +626,6 @@
             const loginTime = localStorage.getItem('login_time');
             const currentTime = Date.now();
             
-            // Auto-logout after 7 days
             const WEEK_IN_MS = 7 * 24 * 60 * 60 * 1000;
             
             if (loginStatus === 'true' && loginTime && (currentTime - parseInt(loginTime)) < WEEK_IN_MS) {
@@ -686,70 +642,53 @@
         let githubConfig = {
             username: 'billcandy',
             repo: 'kids-point-system',
-            token: localStorage.getItem('github_token') || '', // Load saved token from device
+            token: '', // Will be set when user enables sync
             dataFile: 'points-data.json'
         };
 
-        let isGitHubConfigured = true; // Always configured now
         let isOnline = false;
-        let canSync = false; // Can we sync to GitHub?
+        let canSync = false;
 
         // ================================
-        // DATA MANAGEMENT
-        // ================================
-        
-        let currentPoints = 0;
-        let pinCode = '1234';
-        let rewards = [
-            {"name":"Watch cartoons for 30 minutes","cost":3},
-            {"name":"Stay up 30 minutes later","cost":5},
-            {"name":"Buy small snacks","cost":8},
-            {"name":"New toy","cost":15}
-        ];
-        let selectedReward = null;
-        const stampSymbols = ['⭐', '🌟', '✨', '💫', '🎖️', '🏆', '👑', '💎'];
-
-        // ================================
-        // GITHUB API FUNCTIONS
+        // SETUP FUNCTIONS
         // ================================
 
-        function saveToken() {
-            const token = document.getElementById('githubToken').value.trim();
-            if (!token) {
-                alert('請輸入 GitHub token');
+        function enableAutoSync() {
+            // Set the token securely (this approach keeps it out of the public repo)
+            const token = prompt('Please paste your GitHub token here:\n(It will be saved securely on your device)');
+            if (!token || token.length < 20) {
+                alert('Invalid token. Please try again.');
                 return;
             }
             
             githubConfig.token = token;
             localStorage.setItem('github_token', token);
+            localStorage.setItem('setup_complete', 'sync');
             
-            document.getElementById('tokenSection').style.display = 'none';
-            updateSyncInfo('連線中...');
-            
-            // Test the token by trying to load data
+            document.getElementById('setupSection').style.display = 'none';
+            updateSyncInfo('Connecting to GitHub...');
+            updateSyncStatus('connecting', '🔄 Connecting...');
             loadGitHubData();
         }
-        
+
         function useLocalOnly() {
             localStorage.setItem('use_local_only', 'true');
-            document.getElementById('tokenSection').style.display = 'none';
-            updateSyncInfo('使用本機儲存。點數不會在裝置間同步。');
-            updateSyncStatus('offline', '📱 本機模式');
+            localStorage.setItem('setup_complete', 'local');
+            document.getElementById('setupSection').style.display = 'none';
+            updateSyncInfo('Using local storage only. Points won\'t sync between devices.');
+            updateSyncStatus('offline', '📱 Local Only');
             loadLocalData();
         }
-        
+
         function updateSyncInfo(message) {
             document.getElementById('syncInfo').textContent = message;
         }
 
-        // Removed setupGitHub function as configuration is now hardcoded
+        // ================================
+        // GITHUB API FUNCTIONS
+        // ================================
 
         async function loadGitHubData() {
-            if (!isGitHubConfigured) {
-                loadLocalData();
-                return;
-            }
-
             try {
                 updateSyncStatus('connecting', '📡 Loading data...');
                 
@@ -774,7 +713,7 @@
                     rewards = content.rewards || rewards;
                     
                     isOnline = true;
-                    canSync = !!githubConfig.token; // Can sync if we have token
+                    canSync = !!githubConfig.token;
                     
                     if (canSync) {
                         updateSyncStatus('online', '☁️ GitHub Sync');
@@ -784,17 +723,14 @@
                         updateSyncInfo('Can see shared data, but need token to add points.');
                     }
                 } else if (response.status === 404) {
-                    // File doesn't exist yet
                     if (githubConfig.token) {
-                        // Try to create it if we have token
                         await saveGitHubData();
                         canSync = true;
                         updateSyncStatus('online', '☁️ GitHub Sync');
                         updateSyncInfo('Data syncs between all devices!');
                     } else {
-                        // No token, can't create file
                         updateSyncStatus('offline', '📱 Local Mode');
-                        updateSyncInfo('No shared data found. Add token to start syncing.');
+                        updateSyncInfo('No shared data found.');
                         isOnline = false;
                         loadLocalData();
                     }
@@ -804,6 +740,7 @@
             } catch (error) {
                 console.error('Failed to load from GitHub:', error);
                 updateSyncStatus('offline', '📱 Local Mode');
+                updateSyncInfo('Using local storage only.');
                 isOnline = false;
                 loadLocalData();
             }
@@ -815,7 +752,6 @@
             const useLocalOnly = localStorage.getItem('use_local_only') === 'true';
             
             if (useLocalOnly || !githubConfig.token) {
-                // Save locally only
                 saveLocalData();
                 return;
             }
@@ -830,7 +766,6 @@
             try {
                 updateSyncStatus('connecting', '💾 Saving...');
                 
-                // Check if file exists to get SHA
                 let sha = null;
                 try {
                     const existingFile = await fetch(`https://api.github.com/repos/${githubConfig.username}/${githubConfig.repo}/contents/${githubConfig.dataFile}`, {
@@ -866,7 +801,6 @@
                     updateSyncStatus('online', '☁️ GitHub Sync');
                     updateSyncInfo('Data syncs between all devices!');
                     canSync = true;
-                    // Also save locally as backup
                     saveLocalData();
                 } else {
                     throw new Error(`Save failed: ${response.status}`);
@@ -876,11 +810,6 @@
                 updateSyncStatus('offline', '📱 Local Mode');
                 updateSyncInfo('Failed to sync. Data saved locally.');
                 saveLocalData();
-                
-                // If it's an auth error, show token section
-                if (error.message.includes('401') || error.message.includes('403')) {
-                    showTokenSection();
-                }
             }
         }
 
@@ -888,14 +817,21 @@
             const syncStatus = document.getElementById('syncStatus');
             syncStatus.textContent = text;
         }
-        
-        function showTokenSection() {
-            document.getElementById('tokenSection').style.display = 'block';
-        }
 
         // ================================
-        // LOCAL DATA FUNCTIONS
+        // DATA MANAGEMENT
         // ================================
+        
+        let currentPoints = 0;
+        let pinCode = '1234';
+        let rewards = [
+            {"name":"Watch cartoons for 30 minutes","cost":3},
+            {"name":"Stay up 30 minutes later","cost":5},
+            {"name":"Buy small snacks","cost":8},
+            {"name":"New toy","cost":15}
+        ];
+        let selectedReward = null;
+        const stampSymbols = ['⭐', '🌟', '✨', '💫', '🎖️', '🏆', '👑', '💎'];
 
         function loadLocalData() {
             currentPoints = parseInt(localStorage.getItem('points') || '0');
@@ -1057,7 +993,9 @@
             refreshBtn.disabled = true;
             refreshBtn.textContent = '🔄 Refreshing...';
             
-            await loadGitHubData();
+            if (isOnline) {
+                await loadGitHubData();
+            }
             
             setTimeout(() => {
                 refreshBtn.disabled = false;
@@ -1083,47 +1021,34 @@
             }, 1000);
         }
 
-        function showError(message) {
-            const error = document.createElement('div');
-            error.className = 'error-message';
-            error.textContent = message;
-            document.querySelector('.container').insertBefore(error, document.querySelector('.header'));
-            
-            setTimeout(() => {
-                if (error.parentNode) {
-                    error.remove();
-                }
-            }, 5000);
-        }
-
         // ================================
         // INITIALIZATION
         // ================================
 
         document.addEventListener('DOMContentLoaded', function() {
-            // Check login status first
             checkLoginStatus();
             
-            // Check if we need to show token setup
-            const useLocalOnly = localStorage.getItem('use_local_only') === 'true';
-            const hasToken = !!githubConfig.token;
+            // Load saved GitHub token if exists
+            const savedToken = localStorage.getItem('github_token');
+            if (savedToken) {
+                githubConfig.token = savedToken;
+            }
             
-            if (useLocalOnly) {
-                // User chose local only
-                updateSyncInfo('使用本機儲存。點數不會在裝置間同步。');
-                updateSyncStatus('offline', '📱 本機模式');
-                loadLocalData();
-            } else if (hasToken) {
-                // User has token, try to sync
-                updateSyncInfo('連接中...');
-                updateSyncStatus('connecting', '🔄 連接中...');
+            const setupComplete = localStorage.getItem('setup_complete');
+            const useLocalOnly = localStorage.getItem('use_local_only') === 'true';
+            
+            if (setupComplete === 'sync' && githubConfig.token) {
+                updateSyncInfo('Connecting to GitHub...');
+                updateSyncStatus('connecting', '🔄 Connecting...');
                 loadGitHubData();
+            } else if (setupComplete === 'local' || useLocalOnly) {
+                updateSyncInfo('Using local storage only. Points won\'t sync between devices.');
+                updateSyncStatus('offline', '📱 Local Only');
+                loadLocalData();
             } else {
-                // No token, show setup 
-                updateSyncInfo('需要設定 GitHub token 才能同步');
-                setTimeout(() => {
-                    showTokenSection();
-                }, 1000);
+                // Show setup on first run
+                updateSyncInfo('Please choose your preferred sync method.');
+                loadLocalData();
             }
 
             // Keyboard shortcuts
@@ -1144,15 +1069,15 @@
                     closeRedeemModal();
                 }
             });
-
-            // Auto-refresh every 30 seconds when online
+            
+            // Auto-refresh when online
             setInterval(() => {
-                if (isOnline && isGitHubConfigured) {
+                if (isOnline && canSync) {
                     loadGitHubData();
                 }
             }, 30000);
             
-            // Click outside modal area to close
+            // Click outside modal to close
             window.onclick = function(event) {
                 const pinModal = document.getElementById('pinModal');
                 const cancelPinModal = document.getElementById('cancelPinModal');
