@@ -1,0 +1,23 @@
+{
+  "points": 0,
+  "pinCode": "1234",
+  "rewards": [
+    {
+      "name": "Watch cartoons for 30 minutes",
+      "cost": 3
+    },
+    {
+      "name": "Stay up 30 minutes later",
+      "cost": 5
+    },
+    {
+      "name": "Buy small snacks",
+      "cost": 8
+    },
+    {
+      "name": "New toy",
+      "cost": 15
+    }
+  ],
+  "lastUpdated": "2025-08-30T07:53:10.812Z"
+}
