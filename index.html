@@ -362,10 +362,145 @@
             color: #4a5568;
             font-size: 14px;
         }
+
+        .login-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+        }
+
+        .login-card {
+            background: white;
+            border-radius: 25px;
+            padding: 40px;
+            text-align: center;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+            max-width: 400px;
+            width: 90%;
+        }
+
+        .login-title {
+            font-size: 28px;
+            color: #4a5568;
+            margin-bottom: 10px;
+        }
+
+        .login-subtitle {
+            color: #718096;
+            margin-bottom: 30px;
+        }
+
+        .login-mascot {
+            font-size: 60px;
+            margin: 20px 0;
+            animation: bounce 2s infinite;
+        }
+
+        .login-input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e2e8f0;
+            border-radius: 15px;
+            font-size: 16px;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .login-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .login-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 15px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .login-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .login-error {
+            color: #e53e3e;
+            background: #fed7d7;
+            padding: 10px;
+            border-radius: 8px;
+            margin-top: 15px;
+            display: none;
+        }
+
+        .logout-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 15px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .logout-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-10px); }
+            20%, 40%, 60%, 80% { transform: translateX(10px); }
+        }
     </style>
 </head>
 <body>
-    <div class="container">
+    <!-- Login Screen -->
+    <div id="loginScreen" class="login-screen">
+        <div class="login-card">
+            <h1 class="login-title">🌟 Family Access 🌟</h1>
+            <p class="login-subtitle">Enter password to access the point system</p>
+            <div class="login-mascot">🔐</div>
+            
+            <input 
+                type="password" 
+                id="loginPassword" 
+                class="login-input" 
+                placeholder="Enter family password"
+                maxlength="50"
+            >
+            
+            <button class="login-btn" onclick="checkLogin()">🚀 Enter System</button>
+            
+            <div id="loginError" class="login-error">
+                Incorrect password! Please try again.
+            </div>
+        </div>
+    </div>
+
+    <div class="container" id="mainApp" style="display: none;">
+        <button class="logout-btn" onclick="logout()" title="Logout">🚪 Logout</button>
         <!-- GitHub 設定區域 -->
         <div id="setupSection" class="setup-section">
             <div class="setup-title">⚙️ GitHub API Configuration</div>
@@ -464,6 +599,76 @@
     </div>
 
     <script>
+        // ================================
+        // AUTHENTICATION
+        // ================================
+        
+        const FAMILY_PASSWORD = 'ellieisagoodmom';
+        let isLoggedIn = false;
+        
+        function checkLogin() {
+            const password = document.getElementById('loginPassword').value;
+            const errorDiv = document.getElementById('loginError');
+            
+            if (password === FAMILY_PASSWORD) {
+                // Login successful
+                localStorage.setItem('family_login', 'true');
+                localStorage.setItem('login_time', Date.now().toString());
+                showMainApp();
+                errorDiv.style.display = 'none';
+            } else {
+                // Login failed
+                errorDiv.style.display = 'block';
+                document.getElementById('loginPassword').value = '';
+                document.getElementById('loginPassword').focus();
+                
+                // Add shake animation
+                const loginCard = document.querySelector('.login-card');
+                loginCard.style.animation = 'shake 0.5s';
+                setTimeout(() => {
+                    loginCard.style.animation = '';
+                }, 500);
+            }
+        }
+        
+        function logout() {
+            if (confirm('Are you sure you want to logout?')) {
+                localStorage.removeItem('family_login');
+                localStorage.removeItem('login_time');
+                isLoggedIn = false;
+                showLoginScreen();
+            }
+        }
+        
+        function showMainApp() {
+            document.getElementById('loginScreen').style.display = 'none';
+            document.getElementById('mainApp').style.display = 'block';
+            isLoggedIn = true;
+        }
+        
+        function showLoginScreen() {
+            document.getElementById('loginScreen').style.display = 'flex';
+            document.getElementById('mainApp').style.display = 'none';
+            document.getElementById('loginPassword').value = '';
+            document.getElementById('loginPassword').focus();
+            isLoggedIn = false;
+        }
+        
+        function checkLoginStatus() {
+            const loginStatus = localStorage.getItem('family_login');
+            const loginTime = localStorage.getItem('login_time');
+            const currentTime = Date.now();
+            
+            // Auto-logout after 7 days
+            const WEEK_IN_MS = 7 * 24 * 60 * 60 * 1000;
+            
+            if (loginStatus === 'true' && loginTime && (currentTime - parseInt(loginTime)) < WEEK_IN_MS) {
+                showMainApp();
+            } else {
+                showLoginScreen();
+            }
+        }
+        
         // ================================
         // GITHUB API CONFIGURATION
         // ================================
@@ -826,6 +1031,9 @@
         // ================================
 
         document.addEventListener('DOMContentLoaded', function() {
+            // Check login status first
+            checkLoginStatus();
+            
             // Check if GitHub is already configured
             if (githubConfig.username && githubConfig.repo) {
                 isGitHubConfigured = true;
@@ -846,7 +1054,9 @@
             // Keyboard shortcuts
             document.addEventListener('keydown', function(e) {
                 if (e.key === 'Enter') {
-                    if (document.getElementById('pinModal').style.display === 'block') {
+                    if (document.getElementById('loginScreen').style.display === 'flex') {
+                        checkLogin();
+                    } else if (document.getElementById('pinModal').style.display === 'block') {
                         checkPin();
                     } else if (document.getElementById('redeemModal').style.display === 'block') {
                         confirmRedeem();
