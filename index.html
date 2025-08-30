@@ -39,53 +39,6 @@
             margin-bottom: 10px;
         }
 
-        .setup-section {
-            background: #fff5f5;
-            border: 2px solid #feb2b2;
-            border-radius: 15px;
-            padding: 20px;
-            margin-bottom: 20px;
-        }
-
-        .setup-section.complete {
-            background: #f0fff4;
-            border-color: #9ae6b4;
-        }
-
-        .setup-title {
-            font-weight: bold;
-            color: #e53e3e;
-            margin-bottom: 10px;
-        }
-
-        .setup-section.complete .setup-title {
-            color: #38a169;
-        }
-
-        .config-input {
-            width: 100%;
-            padding: 10px;
-            border: 2px solid #e2e8f0;
-            border-radius: 8px;
-            margin-bottom: 10px;
-            font-family: monospace;
-            font-size: 12px;
-        }
-
-        .setup-btn {
-            background: #4299e1;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: bold;
-        }
-
-        .setup-btn:hover {
-            background: #3182ce;
-        }
-
         .points-display {
             background: linear-gradient(45deg, #667eea, #764ba2);
             color: white;
@@ -138,9 +91,14 @@
         }
 
         .action-buttons {
-            display: flex;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
             gap: 15px;
             margin-bottom: 30px;
+        }
+
+        .action-buttons .btn:first-child {
+            grid-column: 1 / -1;
         }
 
         .btn {
@@ -501,44 +459,7 @@
 
     <div class="container" id="mainApp" style="display: none;">
         <button class="logout-btn" onclick="logout()" title="Logout">🚪 Logout</button>
-        <!-- GitHub 設定區域 -->
-        <div id="setupSection" class="setup-section">
-            <div class="setup-title">⚙️ GitHub API Configuration</div>
-            <p style="font-size: 14px; margin-bottom: 15px;">
-                To enable cloud sync between parents, please configure your GitHub repository:
-            </p>
-            
-            <input 
-                type="text" 
-                id="githubUsername" 
-                class="config-input" 
-                placeholder="Your GitHub username"
-                style="margin-bottom: 10px;"
-            >
-            
-            <input 
-                type="text" 
-                id="githubRepo" 
-                class="config-input" 
-                placeholder="Repository name (e.g., kids-point-system)"
-                style="margin-bottom: 10px;"
-            >
-            
-            <input 
-                type="password" 
-                id="githubToken" 
-                class="config-input" 
-                placeholder="Personal Access Token (optional for public repos)"
-                style="margin-bottom: 10px;"
-            >
-            
-            <div style="font-size: 12px; color: #718096; margin-bottom: 15px;">
-                💡 <strong>How to get token:</strong> GitHub → Settings → Developer settings → Personal access tokens → Generate new token → Select "repo" permission
-            </div>
-            
-            <button class="setup-btn" onclick="setupGitHub()">💾 Save Configuration</button>
-        </div>
-
+        
         <div class="header">
             <h1 class="title">🌟 Kids English Point System 🌟</h1>
         </div>
@@ -557,6 +478,9 @@
         <div class="action-buttons">
             <button class="btn btn-primary" onclick="showPinModal()" id="addPointBtn">
                 📚 Complete English Study
+            </button>
+            <button class="btn btn-secondary" onclick="showCancelPinModal()" id="cancelPointBtn" style="background: linear-gradient(45deg, #e53e3e, #c53030);">
+                ❌ Cancel Last Point
             </button>
             <button class="btn btn-secondary" onclick="refreshData()">
                 🔄 Refresh Data
@@ -586,6 +510,19 @@
         </div>
     </div>
 
+    <!-- Cancel Point PIN Modal -->
+    <div id="cancelPinModal" class="modal">
+        <div class="modal-content">
+            <h2>🔒 Cancel Last Point</h2>
+            <p style="color: #e53e3e; margin-bottom: 15px;">Enter PIN to remove the last stamp</p>
+            <input type="password" id="cancelPinInput" class="pin-input" maxlength="4" placeholder="PIN">
+            <div class="modal-buttons">
+                <button class="btn-confirm" onclick="checkCancelPin()">Confirm Cancel</button>
+                <button class="btn-cancel" onclick="closeCancelPinModal()">Cancel</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Redeem Modal -->
     <div id="redeemModal" class="modal">
         <div class="modal-content">
@@ -603,7 +540,7 @@
         // AUTHENTICATION
         // ================================
         
-        const FAMILY_PASSWORD = 'ellieisagoodmom';
+        const FAMILY_PASSWORD = '1225';
         let isLoggedIn = false;
         
         function checkLogin() {
@@ -674,13 +611,13 @@
         // ================================
         
         let githubConfig = {
-            username: localStorage.getItem('github_username') || '',
-            repo: localStorage.getItem('github_repo') || '',
-            token: localStorage.getItem('github_token') || '',
+            username: 'billcandy',
+            repo: 'kids-point-system',
+            token: '', // Not needed for public repo
             dataFile: 'points-data.json'
         };
 
-        let isGitHubConfigured = false;
+        let isGitHubConfigured = true; // Always configured now
         let isOnline = false;
 
         // ================================
@@ -702,38 +639,7 @@
         // GITHUB API FUNCTIONS
         // ================================
 
-        function setupGitHub() {
-            const username = document.getElementById('githubUsername').value.trim();
-            const repo = document.getElementById('githubRepo').value.trim();
-            const token = document.getElementById('githubToken').value.trim();
-
-            if (!username || !repo) {
-                alert('Please enter both username and repository name');
-                return;
-            }
-
-            githubConfig.username = username;
-            githubConfig.repo = repo;
-            githubConfig.token = token;
-
-            localStorage.setItem('github_username', username);
-            localStorage.setItem('github_repo', repo);
-            localStorage.setItem('github_token', token);
-
-            const setupSection = document.getElementById('setupSection');
-            setupSection.classList.add('complete');
-            setupSection.innerHTML = `
-                <div class="setup-title">✅ GitHub API Configured</div>
-                <p style="font-size: 14px; color: #38a169;">
-                    Connected to: ${username}/${repo}
-                    <button class="refresh-btn" onclick="location.reload()">Reconfigure</button>
-                </p>
-            `;
-
-            isGitHubConfigured = true;
-            updateSyncStatus('connecting', '🔄 Testing connection...');
-            loadGitHubData();
-        }
+        // Removed setupGitHub function as configuration is now hardcoded
 
         async function loadGitHubData() {
             if (!isGitHubConfigured) {
@@ -931,6 +837,20 @@
             document.getElementById('pinModal').style.display = 'none';
         }
 
+        function showCancelPinModal() {
+            if (currentPoints <= 0) {
+                alert('No points to cancel!');
+                return;
+            }
+            document.getElementById('cancelPinModal').style.display = 'block';
+            document.getElementById('cancelPinInput').value = '';
+            document.getElementById('cancelPinInput').focus();
+        }
+
+        function closeCancelPinModal() {
+            document.getElementById('cancelPinModal').style.display = 'none';
+        }
+
         function checkPin() {
             const inputPin = document.getElementById('pinInput').value;
             if (inputPin === pinCode) {
@@ -943,6 +863,18 @@
             }
         }
 
+        function checkCancelPin() {
+            const inputPin = document.getElementById('cancelPinInput').value;
+            if (inputPin === pinCode) {
+                cancelPoint();
+                closeCancelPinModal();
+            } else {
+                alert('Incorrect PIN code! Please try again.');
+                document.getElementById('cancelPinInput').value = '';
+                document.getElementById('cancelPinInput').focus();
+            }
+        }
+
         async function addPoint() {
             document.getElementById('addPointBtn').disabled = true;
             currentPoints += 1;
@@ -951,6 +883,22 @@
             showAnimation('⭐ +1 Point!');
             setTimeout(() => {
                 document.getElementById('addPointBtn').disabled = false;
+            }, 1000);
+        }
+
+        async function cancelPoint() {
+            if (currentPoints <= 0) {
+                alert('No points to cancel!');
+                return;
+            }
+            
+            document.getElementById('cancelPointBtn').disabled = true;
+            currentPoints -= 1;
+            updateDisplay();
+            await saveGitHubData();
+            showAnimation('❌ -1 Point!');
+            setTimeout(() => {
+                document.getElementById('cancelPointBtn').disabled = false;
             }, 1000);
         }
 
@@ -1034,22 +982,9 @@
             // Check login status first
             checkLoginStatus();
             
-            // Check if GitHub is already configured
-            if (githubConfig.username && githubConfig.repo) {
-                isGitHubConfigured = true;
-                const setupSection = document.getElementById('setupSection');
-                setupSection.classList.add('complete');
-                setupSection.innerHTML = `
-                    <div class="setup-title">✅ GitHub API Configured</div>
-                    <p style="font-size: 14px; color: #38a169;">
-                        Connected to: ${githubConfig.username}/${githubConfig.repo}
-                        <button class="refresh-btn" onclick="location.reload()">Reconfigure</button>
-                    </p>
-                `;
-                loadGitHubData();
-            } else {
-                loadLocalData();
-            }
+            // Initialize with hardcoded GitHub configuration
+            updateSyncStatus('connecting', '🔄 Connecting...');
+            loadGitHubData();
 
             // Keyboard shortcuts
             document.addEventListener('keydown', function(e) {
@@ -1058,11 +993,14 @@
                         checkLogin();
                     } else if (document.getElementById('pinModal').style.display === 'block') {
                         checkPin();
+                    } else if (document.getElementById('cancelPinModal').style.display === 'block') {
+                        checkCancelPin();
                     } else if (document.getElementById('redeemModal').style.display === 'block') {
                         confirmRedeem();
                     }
                 } else if (e.key === 'Escape') {
                     closePinModal();
+                    closeCancelPinModal();
                     closeRedeemModal();
                 }
             });
@@ -1073,6 +1011,21 @@
                     loadGitHubData();
                 }
             }, 30000);
+            
+            // Click outside modal area to close
+            window.onclick = function(event) {
+                const pinModal = document.getElementById('pinModal');
+                const cancelPinModal = document.getElementById('cancelPinModal');
+                const redeemModal = document.getElementById('redeemModal');
+                
+                if (event.target === pinModal) {
+                    closePinModal();
+                } else if (event.target === cancelPinModal) {
+                    closeCancelPinModal();
+                } else if (event.target === redeemModal) {
+                    closeRedeemModal();
+                }
+            }
         });
 
         // Add CSS animation
