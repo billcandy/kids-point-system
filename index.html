@@ -1,0 +1,879 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kids Point System - GitHub Sync</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: "Arial", sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 500px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 25px;
+            padding: 30px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .title {
+            color: #4a5568;
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .setup-section {
+            background: #fff5f5;
+            border: 2px solid #feb2b2;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .setup-section.complete {
+            background: #f0fff4;
+            border-color: #9ae6b4;
+        }
+
+        .setup-title {
+            font-weight: bold;
+            color: #e53e3e;
+            margin-bottom: 10px;
+        }
+
+        .setup-section.complete .setup-title {
+            color: #38a169;
+        }
+
+        .config-input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            font-family: monospace;
+            font-size: 12px;
+        }
+
+        .setup-btn {
+            background: #4299e1;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .setup-btn:hover {
+            background: #3182ce;
+        }
+
+        .points-display {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            padding: 20px;
+            border-radius: 20px;
+            text-align: center;
+            margin-bottom: 30px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .points-display::before {
+            content: '⭐';
+            position: absolute;
+            font-size: 30px;
+            top: 10px;
+            left: 20px;
+            opacity: 0.7;
+        }
+
+        .points-display::after {
+            content: '🎉';
+            position: absolute;
+            font-size: 30px;
+            top: 10px;
+            right: 20px;
+            opacity: 0.7;
+        }
+
+        .current-points {
+            font-size: 36px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .points-label {
+            font-size: 16px;
+            opacity: 0.9;
+        }
+
+        .sync-status {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            font-size: 12px;
+            opacity: 0.8;
+            background: rgba(255,255,255,0.2);
+            padding: 4px 8px;
+            border-radius: 10px;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 15px;
+            border: none;
+            border-radius: 15px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: linear-gradient(45deg, #00d2d3, #54a0ff);
+            color: white;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .stamps-section {
+            background: #f7fafc;
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+
+        .section-title {
+            font-size: 18px;
+            color: #4a5568;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .stamps-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(40px, 1fr));
+            gap: 8px;
+            margin-bottom: 15px;
+            min-height: 120px;
+            align-content: start;
+        }
+
+        .stamp {
+            width: 40px;
+            height: 40px;
+            font-size: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(45deg, #ffd700, #ffeb3b);
+            border-radius: 50%;
+            box-shadow: 0 2px 8px rgba(255, 215, 0, 0.3);
+            animation: stampIn 0.5s ease-out;
+            position: relative;
+        }
+
+        .stamp::before {
+            content: '';
+            position: absolute;
+            inset: 3px;
+            border-radius: 50%;
+            border: 2px dashed #ff6b35;
+            opacity: 0.6;
+        }
+
+        @keyframes stampIn {
+            0% { transform: scale(0) rotate(180deg); opacity: 0; }
+            50% { transform: scale(1.2) rotate(90deg); opacity: 0.8; }
+            100% { transform: scale(1) rotate(0deg); opacity: 1; }
+        }
+
+        .rewards-section h2 {
+            font-size: 18px;
+            color: #4a5568;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .reward-item {
+            background: #f7fafc;
+            border: 2px solid #e2e8f0;
+            border-radius: 15px;
+            padding: 15px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .reward-item:hover {
+            border-color: #667eea;
+            background: #edf2f7;
+            transform: translateY(-1px);
+        }
+
+        .reward-cost {
+            background: #667eea;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 15% auto;
+            padding: 30px;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 400px;
+            text-align: center;
+        }
+
+        .pin-input {
+            font-size: 24px;
+            padding: 15px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            text-align: center;
+            width: 200px;
+            margin: 20px auto;
+            display: block;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .btn-confirm {
+            background: #48bb78;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .btn-cancel {
+            background: #e53e3e;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .loading {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+
+        .error-message {
+            color: #e53e3e;
+            background: #fed7d7;
+            padding: 10px;
+            border-radius: 8px;
+            margin: 10px 0;
+            font-size: 14px;
+        }
+
+        .refresh-btn {
+            background: #38a169;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            margin-left: 10px;
+        }
+
+        .family-info {
+            background: #e6fffa;
+            border: 2px solid #81e6d9;
+            border-radius: 15px;
+            padding: 15px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .family-info h3 {
+            color: #2d3748;
+            margin-bottom: 10px;
+        }
+
+        .family-info p {
+            color: #4a5568;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- GitHub 設定區域 -->
+        <div id="setupSection" class="setup-section">
+            <div class="setup-title">⚙️ GitHub API Configuration</div>
+            <p style="font-size: 14px; margin-bottom: 15px;">
+                To enable cloud sync between parents, please configure your GitHub repository:
+            </p>
+            
+            <input 
+                type="text" 
+                id="githubUsername" 
+                class="config-input" 
+                placeholder="Your GitHub username"
+                style="margin-bottom: 10px;"
+            >
+            
+            <input 
+                type="text" 
+                id="githubRepo" 
+                class="config-input" 
+                placeholder="Repository name (e.g., kids-point-system)"
+                style="margin-bottom: 10px;"
+            >
+            
+            <input 
+                type="password" 
+                id="githubToken" 
+                class="config-input" 
+                placeholder="Personal Access Token (optional for public repos)"
+                style="margin-bottom: 10px;"
+            >
+            
+            <div style="font-size: 12px; color: #718096; margin-bottom: 15px;">
+                💡 <strong>How to get token:</strong> GitHub → Settings → Developer settings → Personal access tokens → Generate new token → Select "repo" permission
+            </div>
+            
+            <button class="setup-btn" onclick="setupGitHub()">💾 Save Configuration</button>
+        </div>
+
+        <div class="header">
+            <h1 class="title">🌟 Kids English Point System 🌟</h1>
+        </div>
+
+        <div class="family-info">
+            <h3>👨‍👩‍👧 Family Shared Account</h3>
+            <p>Both parents can add points from any device! Data syncs through GitHub.</p>
+        </div>
+
+        <div class="points-display">
+            <div class="sync-status" id="syncStatus">📱 Local Mode</div>
+            <div class="current-points" id="currentPoints">0</div>
+            <div class="points-label">Current Points</div>
+        </div>
+
+        <div class="action-buttons">
+            <button class="btn btn-primary" onclick="showPinModal()" id="addPointBtn">
+                📚 Complete English Study
+            </button>
+            <button class="btn btn-secondary" onclick="refreshData()">
+                🔄 Refresh Data
+            </button>
+        </div>
+
+        <div class="stamps-section">
+            <h2 class="section-title">🌟 My Stamp Collection</h2>
+            <div id="stampsContainer" class="stamps-container"></div>
+        </div>
+
+        <div class="rewards-section">
+            <h2>🎁 Rewards List</h2>
+            <div id="rewardsList"></div>
+        </div>
+    </div>
+
+    <!-- PIN Modal -->
+    <div id="pinModal" class="modal">
+        <div class="modal-content">
+            <h2>🔐 Please Enter PIN Code</h2>
+            <input type="password" id="pinInput" class="pin-input" maxlength="4" placeholder="PIN">
+            <div class="modal-buttons">
+                <button class="btn-confirm" onclick="checkPin()">Confirm</button>
+                <button class="btn-cancel" onclick="closePinModal()">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Redeem Modal -->
+    <div id="redeemModal" class="modal">
+        <div class="modal-content">
+            <h2>🎁 Confirm Redeem</h2>
+            <p id="redeemText"></p>
+            <div class="modal-buttons">
+                <button class="btn-confirm" onclick="confirmRedeem()">Confirm Redeem</button>
+                <button class="btn-cancel" onclick="closeRedeemModal()">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ================================
+        // GITHUB API CONFIGURATION
+        // ================================
+        
+        let githubConfig = {
+            username: localStorage.getItem('github_username') || '',
+            repo: localStorage.getItem('github_repo') || '',
+            token: localStorage.getItem('github_token') || '',
+            dataFile: 'points-data.json'
+        };
+
+        let isGitHubConfigured = false;
+        let isOnline = false;
+
+        // ================================
+        // DATA MANAGEMENT
+        // ================================
+        
+        let currentPoints = 0;
+        let pinCode = '1234';
+        let rewards = [
+            {"name":"Watch cartoons for 30 minutes","cost":3},
+            {"name":"Stay up 30 minutes later","cost":5},
+            {"name":"Buy small snacks","cost":8},
+            {"name":"New toy","cost":15}
+        ];
+        let selectedReward = null;
+        const stampSymbols = ['⭐', '🌟', '✨', '💫', '🎖️', '🏆', '👑', '💎'];
+
+        // ================================
+        // GITHUB API FUNCTIONS
+        // ================================
+
+        function setupGitHub() {
+            const username = document.getElementById('githubUsername').value.trim();
+            const repo = document.getElementById('githubRepo').value.trim();
+            const token = document.getElementById('githubToken').value.trim();
+
+            if (!username || !repo) {
+                alert('Please enter both username and repository name');
+                return;
+            }
+
+            githubConfig.username = username;
+            githubConfig.repo = repo;
+            githubConfig.token = token;
+
+            localStorage.setItem('github_username', username);
+            localStorage.setItem('github_repo', repo);
+            localStorage.setItem('github_token', token);
+
+            const setupSection = document.getElementById('setupSection');
+            setupSection.classList.add('complete');
+            setupSection.innerHTML = `
+                <div class="setup-title">✅ GitHub API Configured</div>
+                <p style="font-size: 14px; color: #38a169;">
+                    Connected to: ${username}/${repo}
+                    <button class="refresh-btn" onclick="location.reload()">Reconfigure</button>
+                </p>
+            `;
+
+            isGitHubConfigured = true;
+            updateSyncStatus('connecting', '🔄 Testing connection...');
+            loadGitHubData();
+        }
+
+        async function loadGitHubData() {
+            if (!isGitHubConfigured) {
+                loadLocalData();
+                return;
+            }
+
+            try {
+                updateSyncStatus('connecting', '📡 Loading data...');
+                
+                const headers = {
+                    'Accept': 'application/vnd.github.v3+json'
+                };
+                
+                if (githubConfig.token) {
+                    headers['Authorization'] = `token ${githubConfig.token}`;
+                }
+
+                const response = await fetch(`https://api.github.com/repos/${githubConfig.username}/${githubConfig.repo}/contents/${githubConfig.dataFile}`, {
+                    headers: headers
+                });
+
+                if (response.ok) {
+                    const fileData = await response.json();
+                    const content = JSON.parse(atob(fileData.content));
+                    
+                    currentPoints = content.points || 0;
+                    pinCode = content.pinCode || '1234';
+                    rewards = content.rewards || rewards;
+                    
+                    isOnline = true;
+                    updateSyncStatus('online', '☁️ GitHub Sync');
+                } else if (response.status === 404) {
+                    // File doesn't exist yet, create it
+                    await saveGitHubData();
+                    isOnline = true;
+                    updateSyncStatus('online', '☁️ GitHub Sync');
+                } else {
+                    throw new Error(`GitHub API error: ${response.status}`);
+                }
+            } catch (error) {
+                console.error('Failed to load from GitHub:', error);
+                updateSyncStatus('offline', '📱 Local Mode');
+                isOnline = false;
+                loadLocalData();
+            }
+
+            updateDisplay();
+        }
+
+        async function saveGitHubData() {
+            if (!isOnline || !isGitHubConfigured) {
+                saveLocalData();
+                return;
+            }
+
+            const data = {
+                points: currentPoints,
+                pinCode: pinCode,
+                rewards: rewards,
+                lastUpdated: new Date().toISOString()
+            };
+
+            try {
+                updateSyncStatus('connecting', '💾 Saving...');
+                
+                // Check if file exists to get SHA
+                let sha = null;
+                try {
+                    const headers = {
+                        'Accept': 'application/vnd.github.v3+json'
+                    };
+                    
+                    if (githubConfig.token) {
+                        headers['Authorization'] = `token ${githubConfig.token}`;
+                    }
+                    
+                    const existingFile = await fetch(`https://api.github.com/repos/${githubConfig.username}/${githubConfig.repo}/contents/${githubConfig.dataFile}`, {
+                        headers: headers
+                    });
+                    
+                    if (existingFile.ok) {
+                        const fileData = await existingFile.json();
+                        sha = fileData.sha;
+                    }
+                } catch (e) {
+                    // File doesn't exist, that's okay
+                }
+
+                if (!githubConfig.token) {
+                    // Can't write without token
+                    updateSyncStatus('offline', '📱 Read-Only Mode');
+                    saveLocalData();
+                    showError('Cannot save without GitHub token. Data saved locally.');
+                    return;
+                }
+
+                const response = await fetch(`https://api.github.com/repos/${githubConfig.username}/${githubConfig.repo}/contents/${githubConfig.dataFile}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `token ${githubConfig.token}`,
+                        'Accept': 'application/vnd.github.v3+json',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        message: `Update points data - ${currentPoints} points`,
+                        content: btoa(JSON.stringify(data, null, 2)),
+                        sha: sha
+                    })
+                });
+
+                if (response.ok) {
+                    updateSyncStatus('online', '☁️ GitHub Sync');
+                    // Also save locally as backup
+                    saveLocalData();
+                } else {
+                    throw new Error(`Save failed: ${response.status}`);
+                }
+            } catch (error) {
+                console.error('Failed to save to GitHub:', error);
+                updateSyncStatus('offline', '📱 Local Mode');
+                saveLocalData();
+                showError('Failed to sync with GitHub. Data saved locally.');
+            }
+        }
+
+        function updateSyncStatus(status, text) {
+            const syncStatus = document.getElementById('syncStatus');
+            syncStatus.textContent = text;
+        }
+
+        // ================================
+        // LOCAL DATA FUNCTIONS
+        // ================================
+
+        function loadLocalData() {
+            currentPoints = parseInt(localStorage.getItem('points') || '0');
+            pinCode = localStorage.getItem('pinCode') || '1234';
+            const savedRewards = localStorage.getItem('rewards');
+            if (savedRewards) {
+                rewards = JSON.parse(savedRewards);
+            }
+            updateDisplay();
+        }
+
+        function saveLocalData() {
+            localStorage.setItem('points', currentPoints.toString());
+            localStorage.setItem('pinCode', pinCode);
+            localStorage.setItem('rewards', JSON.stringify(rewards));
+        }
+
+        // ================================
+        // UI FUNCTIONS
+        // ================================
+
+        function updateDisplay() {
+            document.getElementById('currentPoints').textContent = currentPoints;
+            renderStamps();
+            renderRewards();
+        }
+
+        function renderStamps() {
+            const container = document.getElementById('stampsContainer');
+            
+            if (currentPoints === 0) {
+                container.innerHTML = '<div style="grid-column: 1 / -1; text-align: center; color: #718096; font-style: italic; margin-top: 30px;">No stamps yet, go study English! 📚</div>';
+                return;
+            }
+
+            let stampsHtml = '';
+            for (let i = 0; i < currentPoints; i++) {
+                const stampSymbol = stampSymbols[i % stampSymbols.length];
+                stampsHtml += `<div class="stamp">${stampSymbol}</div>`;
+            }
+            container.innerHTML = stampsHtml;
+        }
+
+        function renderRewards() {
+            const container = document.getElementById('rewardsList');
+            container.innerHTML = rewards.map((reward, index) => `
+                <div class="reward-item" onclick="selectReward(${index})">
+                    <span>${reward.name}</span>
+                    <span class="reward-cost">${reward.cost} Points</span>
+                </div>
+            `).join('');
+        }
+
+        function showPinModal() {
+            document.getElementById('pinModal').style.display = 'block';
+            document.getElementById('pinInput').value = '';
+            document.getElementById('pinInput').focus();
+        }
+
+        function closePinModal() {
+            document.getElementById('pinModal').style.display = 'none';
+        }
+
+        function checkPin() {
+            const inputPin = document.getElementById('pinInput').value;
+            if (inputPin === pinCode) {
+                addPoint();
+                closePinModal();
+            } else {
+                alert('Incorrect PIN code! Please try again.');
+                document.getElementById('pinInput').value = '';
+                document.getElementById('pinInput').focus();
+            }
+        }
+
+        async function addPoint() {
+            document.getElementById('addPointBtn').disabled = true;
+            currentPoints += 1;
+            updateDisplay();
+            await saveGitHubData();
+            showAnimation('⭐ +1 Point!');
+            setTimeout(() => {
+                document.getElementById('addPointBtn').disabled = false;
+            }, 1000);
+        }
+
+        function selectReward(index) {
+            selectedReward = index;
+            const reward = rewards[index];
+            
+            if (currentPoints >= reward.cost) {
+                document.getElementById('redeemText').textContent = 
+                    `Do you want to redeem "${reward.name}" for ${reward.cost} points?`;
+                document.getElementById('redeemModal').style.display = 'block';
+            } else {
+                const needed = reward.cost - currentPoints;
+                alert(`Not enough points! You need ${needed} more points to redeem "${reward.name}".`);
+            }
+        }
+
+        async function confirmRedeem() {
+            const reward = rewards[selectedReward];
+            currentPoints -= reward.cost;
+            updateDisplay();
+            await saveGitHubData();
+            showAnimation(`🎉 Got "${reward.name}"!`);
+            closeRedeemModal();
+        }
+
+        function closeRedeemModal() {
+            document.getElementById('redeemModal').style.display = 'none';
+            selectedReward = null;
+        }
+
+        async function refreshData() {
+            const refreshBtn = event.target;
+            refreshBtn.disabled = true;
+            refreshBtn.textContent = '🔄 Refreshing...';
+            
+            await loadGitHubData();
+            
+            setTimeout(() => {
+                refreshBtn.disabled = false;
+                refreshBtn.textContent = '🔄 Refresh Data';
+            }, 1000);
+        }
+
+        function showAnimation(text) {
+            const animation = document.createElement('div');
+            animation.style.cssText = `
+                position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+                font-size: 36px; z-index: 2000; animation: bounce 1s ease-in-out;
+                background: white; padding: 20px; border-radius: 15px;
+                box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            `;
+            animation.textContent = text;
+            document.body.appendChild(animation);
+            
+            setTimeout(() => {
+                if (document.body.contains(animation)) {
+                    document.body.removeChild(animation);
+                }
+            }, 1000);
+        }
+
+        function showError(message) {
+            const error = document.createElement('div');
+            error.className = 'error-message';
+            error.textContent = message;
+            document.querySelector('.container').insertBefore(error, document.querySelector('.header'));
+            
+            setTimeout(() => {
+                if (error.parentNode) {
+                    error.remove();
+                }
+            }, 5000);
+        }
+
+        // ================================
+        // INITIALIZATION
+        // ================================
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check if GitHub is already configured
+            if (githubConfig.username && githubConfig.repo) {
+                isGitHubConfigured = true;
+                const setupSection = document.getElementById('setupSection');
+                setupSection.classList.add('complete');
+                setupSection.innerHTML = `
+                    <div class="setup-title">✅ GitHub API Configured</div>
+                    <p style="font-size: 14px; color: #38a169;">
+                        Connected to: ${githubConfig.username}/${githubConfig.repo}
+                        <button class="refresh-btn" onclick="location.reload()">Reconfigure</button>
+                    </p>
+                `;
+                loadGitHubData();
+            } else {
+                loadLocalData();
+            }
+
+            // Keyboard shortcuts
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    if (document.getElementById('pinModal').style.display === 'block') {
+                        checkPin();
+                    } else if (document.getElementById('redeemModal').style.display === 'block') {
+                        confirmRedeem();
+                    }
+                } else if (e.key === 'Escape') {
+                    closePinModal();
+                    closeRedeemModal();
+                }
+            });
+
+            // Auto-refresh every 30 seconds when online
+            setInterval(() => {
+                if (isOnline && isGitHubConfigured) {
+                    loadGitHubData();
+                }
+            }, 30000);
+        });
+
+        // Add CSS animation
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes bounce {
+                0%, 100% { transform: translate(-50%, -50%) scale(1); }
+                50% { transform: translate(-50%, -50%) scale(1.1); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
