@@ -216,6 +216,50 @@
             align-items: center;
         }
 
+        .reward-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex: 1;
+            margin-right: 10px;
+        }
+
+        .reward-edit-btn {
+            background: #4299e1;
+            color: white;
+            border: none;
+            padding: 6px 10px;
+            border-radius: 8px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            flex-shrink: 0;
+        }
+
+        .reward-edit-btn:hover {
+            background: #3182ce;
+            transform: translateY(-1px);
+        }
+
+        .add-reward-btn {
+            background: linear-gradient(45deg, #48bb78, #38a169);
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 15px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .add-reward-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
         .reward-item:hover {
             border-color: #667eea;
             background: #edf2f7;
@@ -596,6 +640,26 @@
         </div>
     </div>
 
+    <!-- Reward Edit Modal -->
+    <div id="rewardEditModal" class="modal">
+        <div class="modal-content">
+            <h2 id="rewardEditTitle">✏️ 編輯獎勵</h2>
+            <div style="margin-bottom: 15px;">
+                <label style="display: block; margin-bottom: 5px; font-weight: bold;">獎勵名稱：</label>
+                <input type="text" id="rewardNameInput" style="width: 100%; padding: 10px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px;" maxlength="30" placeholder="輸入獎勵名稱">
+            </div>
+            <div style="margin-bottom: 20px;">
+                <label style="display: block; margin-bottom: 5px; font-weight: bold;">所需點數：</label>
+                <input type="number" id="rewardCostInput" style="width: 100%; padding: 10px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px;" min="1" max="999" placeholder="輸入點數">
+            </div>
+            <div class="modal-buttons">
+                <button class="btn-confirm" onclick="saveRewardEdit()" id="saveRewardBtn">確認</button>
+                <button class="btn-cancel" onclick="closeRewardEditModal()">取消</button>
+                <button class="btn-cancel" onclick="deleteReward()" id="deleteRewardBtn" style="background: #e53e3e; margin-left: 10px;">🗑️ 刪除</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Redeem Modal -->
     <div id="redeemModal" class="modal">
         <div class="modal-content">
@@ -707,7 +771,9 @@
             {"name":"New toy","cost":15}
         ];
         let selectedReward = null;
+        let editingRewardIndex = null; // Track which reward is being edited
         const stampSymbols = ['⭐', '🌟', '✨', '💫', '🎖️', '🏆', '👑', '💎'];
+        const MAX_REWARDS = 10; // Maximum number of rewards
 
         // ================================
         // GITHUB API FUNCTIONS
@@ -941,12 +1007,26 @@
 
         function renderRewards() {
             const container = document.getElementById('rewardsList');
-            container.innerHTML = rewards.map((reward, index) => `
-                <div class="reward-item" onclick="selectReward(${index})">
-                    <span>${reward.name}</span>
-                    <span class="reward-cost">${reward.cost} Points</span>
+            let rewardsHtml = rewards.map((reward, index) => `
+                <div class="reward-item">
+                    <div class="reward-content" onclick="selectReward(${index})">
+                        <span>${reward.name}</span>
+                        <span class="reward-cost">${reward.cost} Points</span>
+                    </div>
+                    <button class="reward-edit-btn" onclick="editReward(${index})">✏️</button>
                 </div>
             `).join('');
+            
+            // Add "Add New Reward" button if under limit
+            if (rewards.length < 10) {
+                rewardsHtml += `
+                    <button class="add-reward-btn" onclick="addNewReward()">
+                        ➕ 新增獎勵
+                    </button>
+                `;
+            }
+            
+            container.innerHTML = rewardsHtml;
         }
 
         function showPinModal() {
@@ -1052,6 +1132,87 @@
             selectedReward = null;
         }
 
+        // ================================
+        // REWARD EDITING FUNCTIONS
+        // ================================
+
+        function editReward(index) {
+            window.editingRewardIndex = index;
+            const reward = rewards[index];
+            
+            document.getElementById('rewardEditTitle').textContent = '✏️ 編輯獎勵';
+            document.getElementById('rewardNameInput').value = reward.name;
+            document.getElementById('rewardCostInput').value = reward.cost;
+            document.getElementById('deleteRewardBtn').style.display = 'inline-block';
+            
+            document.getElementById('rewardEditModal').style.display = 'block';
+            document.getElementById('rewardNameInput').focus();
+        }
+
+        function addNewReward() {
+            if (rewards.length >= 10) {
+                alert('最多只能有 10 個獎勵！');
+                return;
+            }
+            
+            window.editingRewardIndex = null; // null means adding new
+            
+            document.getElementById('rewardEditTitle').textContent = '➕ 新增獎勵';
+            document.getElementById('rewardNameInput').value = '';
+            document.getElementById('rewardCostInput').value = '';
+            document.getElementById('deleteRewardBtn').style.display = 'none';
+            
+            document.getElementById('rewardEditModal').style.display = 'block';
+            document.getElementById('rewardNameInput').focus();
+        }
+
+        async function saveRewardEdit() {
+            const name = document.getElementById('rewardNameInput').value.trim();
+            const cost = parseInt(document.getElementById('rewardCostInput').value);
+            
+            if (!name) {
+                alert('請輸入獎勵名稱！');
+                return;
+            }
+            
+            if (!cost || cost < 1 || cost > 999) {
+                alert('請輸入有效的點數（1-999）！');
+                return;
+            }
+            
+            if (window.editingRewardIndex === null) {
+                // Adding new reward
+                rewards.push({name: name, cost: cost});
+                showAnimation('➕ 新增獎勵成功！');
+            } else {
+                // Editing existing reward
+                rewards[window.editingRewardIndex] = {name: name, cost: cost};
+                showAnimation('✏️ 編輯成功！');
+            }
+            
+            updateDisplay();
+            await saveGitHubData();
+            closeRewardEditModal();
+        }
+
+        async function deleteReward() {
+            if (window.editingRewardIndex === null) return;
+            
+            const reward = rewards[window.editingRewardIndex];
+            if (confirm(`確定要刪除「${reward.name}」嗎？`)) {
+                rewards.splice(window.editingRewardIndex, 1);
+                updateDisplay();
+                await saveGitHubData();
+                showAnimation('🗑️ 刪除成功！');
+                closeRewardEditModal();
+            }
+        }
+
+        function closeRewardEditModal() {
+            document.getElementById('rewardEditModal').style.display = 'none';
+            window.editingRewardIndex = null;
+        }
+
         async function refreshData() {
             const refreshBtn = event.target;
             refreshBtn.disabled = true;
@@ -1137,11 +1298,14 @@
                         checkCancelPin();
                     } else if (document.getElementById('redeemModal').style.display === 'block') {
                         confirmRedeem();
+                    } else if (document.getElementById('rewardEditModal').style.display === 'block') {
+                        saveRewardEdit();
                     }
                 } else if (e.key === 'Escape') {
                     closePinModal();
                     closeCancelPinModal();
                     closeRedeemModal();
+                    closeRewardEditModal();
                 }
             });
 
@@ -1157,6 +1321,7 @@
                 const pinModal = document.getElementById('pinModal');
                 const cancelPinModal = document.getElementById('cancelPinModal');
                 const redeemModal = document.getElementById('redeemModal');
+                const rewardEditModal = document.getElementById('rewardEditModal');
                 
                 if (event.target === pinModal) {
                     closePinModal();
@@ -1164,6 +1329,8 @@
                     closeCancelPinModal();
                 } else if (event.target === redeemModal) {
                     closeRedeemModal();
+                } else if (event.target === rewardEditModal) {
+                    closeRewardEditModal();
                 }
             }
         });
