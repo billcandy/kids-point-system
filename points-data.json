@@ -1,5 +1,5 @@
 {
-  "points": 10,
+  "points": 11,
   "pinCode": "1234",
   "rewards": [
     {
@@ -19,5 +19,5 @@
       "cost": 15
     }
   ],
-  "lastUpdated": "2025-10-21T12:59:18.431Z"
+  "lastUpdated": "2025-10-21T12:59:57.700Z"
 }
